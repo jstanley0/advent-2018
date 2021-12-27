@@ -1,5 +1,5 @@
-use std::io::BufRead;
 use std::collections::HashMap;
+use std::io::BufRead;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

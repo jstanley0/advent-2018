@@ -1,12 +1,13 @@
-use std::io::BufRead;
 use std::collections::HashSet;
+use std::io::BufRead;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let file = std::fs::File::open(&args[1]).unwrap();
-    let data: Vec<i64> = std::io::BufReader::new(&file).lines().map(|line| {
-        line.unwrap().parse::<i64>().unwrap()
-    }).collect();
+    let data: Vec<i64> = std::io::BufReader::new(&file)
+        .lines()
+        .map(|line| line.unwrap().parse::<i64>().unwrap())
+        .collect();
 
     let mut sum = 0;
     let mut sums_seen = HashSet::new();
