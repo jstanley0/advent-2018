@@ -1,6 +1,9 @@
 use std::io::BufRead;
 
-fn read_lines<F>(mut f: F) where F: FnMut(String) {
+fn read_lines<F>(mut f: F)
+where
+    F: FnMut(String),
+{
     let args: Vec<String> = std::env::args().collect();
     let file = std::fs::File::open(&args[1]).expect("failed to open input");
     for lr in std::io::BufReader::new(&file).lines() {
