@@ -1,13 +1,15 @@
-PAD = 30
-GENERATIONS = 20
+LPAD = 10
+PAD = 300
+GENERATIONS = 200
 
 import sys
 
-state = '.' * PAD + sys.stdin.readline().strip().replace("initial state: ", "") + '.' * PAD
+state = '.' * LPAD + sys.stdin.readline().strip().replace("initial state: ", "") + '.' * PAD
 sys.stdin.readline()
 
 rules = [line.strip().split(" => ") for line in sys.stdin.readlines()]
 rules = {rule[0] : rule[1] for rule in rules}
+last_sum = 0
 
 for g in range(GENERATIONS):
     ng = ['.'] * len(state)
@@ -20,6 +22,7 @@ for g in range(GENERATIONS):
     sum = 0
     for i in range(len(state)):
         if state[i] == '#':
-            sum += i - PAD
+            sum += i - LPAD
 
-    print(f"{g + 1}: {sum}")
+    print(f"{g + 1}: {sum} {sum - last_sum}")
+    last_sum = sum
