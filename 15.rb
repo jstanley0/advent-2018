@@ -85,63 +85,93 @@ UnitInfo = Struct.new(:type, :point, :hit_points, :attack_power) do
   end
 end
 
-unit_info = []
-maze.each do |val, x, y|
-  if val == 'G' || val == 'E'
-    unit_info << UnitInfo.new(val, Point.new(x, y), 200, 3)
-  end
-end
-
-rounds = 0
-battle_over = false
-loop do
-  unit_info.sort_by!(&:point)
-  unit_info.each do |my_info|
-    next if my_info.dead?
-    raise "stale map" unless maze[*my_info.point] == my_info.type
-
-    enemies = unit_info.select { |u| u.alive? && u.type != my_info.type }
-    if enemies.empty?
-        battle_over = true
-        break
+def run_simulation(maze, elf_attack_power, outcomes)
+  unit_info = []
+  maze.each do |val, x, y|
+    if val == 'G' || val == 'E'
+      unit_info << UnitInfo.new(val, Point.new(x, y), 200, val == 'E' ? elf_attack_power : 3)
     end
+  end
 
-    enemies_in_range = enemies.select { |u| my_info.point.dist(u.point) == 1 }
-    if enemies_in_range.empty?
-      # find the closest enemy
-      best_path = nil
-      enemies.each do |enemy|
-        path = find_shortest_path(maze, my_info.point, enemy.point) if maze.nv(*enemy.point, diag: false).include?('.')
-        next unless path
-        best_path = path if best_path.nil? || path.size < best_path.size
+  rounds = 0
+  battle_over = false
+  loop do
+    unit_info.sort_by!(&:point)
+    unit_info.each do |my_info|
+      next if my_info.dead?
+      raise "stale map" unless maze[*my_info.point] == my_info.type
+
+      enemies = unit_info.select { |u| u.alive? && u.type != my_info.type }
+      if enemies.empty?
+          battle_over = true
+          break
       end
-      next if best_path.nil?
 
-      # move one step toward the enemy
-      raise "bad path" unless best_path.shift == my_info.point
-      maze[*my_info.point] = '.'
-      my_info.point = best_path.first
-      maze[*my_info.point] = my_info.type
-
-      # ... and then see if someone is in range
       enemies_in_range = enemies.select { |u| my_info.point.dist(u.point) == 1 }
+      if enemies_in_range.empty?
+        # find the closest enemy
+        best_path = nil
+        enemies.each do |enemy|
+          path = find_shortest_path(maze, my_info.point, enemy.point) if maze.nv(*enemy.point, diag: false).include?('.')
+          next unless path
+          best_path = path if best_path.nil? || path.size < best_path.size
+        end
+        next if best_path.nil?
+
+        # move one step toward the enemy
+        raise "bad path" unless best_path.shift == my_info.point
+        maze[*my_info.point] = '.'
+        my_info.point = best_path.first
+        maze[*my_info.point] = my_info.type
+
+        # ... and then see if someone is in range
+        enemies_in_range = enemies.select { |u| my_info.point.dist(u.point) == 1 }
+      end
+
+      target = enemies_in_range.min_by { |info| info.hit_points * 1_000_000 + info.point.reading_order }
+      next unless target
+
+      target.attack(my_info.attack_power)
+      if target.dead?
+        if target.type == 'E'
+          puts "an elf died. aborting simulation after #{rounds} rounds with attack power #{elf_attack_power}..."
+          outcomes[elf_attack_power] = -1
+          return false
+        end
+        maze[*target.point] = '.'
+      end
     end
 
-    target = enemies_in_range.min_by { |info| info.hit_points * 1_000_000 + info.point.reading_order }
-    next unless target
-
-    target.attack(my_info.attack_power)
-    if target.dead?
-      maze[*target.point] = '.'
-    end
+    break if battle_over
+    rounds += 1
+    puts "round #{rounds} complete"
+    maze.print
   end
 
-  break if battle_over
-  rounds += 1
-  puts "round #{rounds} complete"
-  maze.print
+  puts "elves win after #{rounds} rounds with attack power #{elf_attack_power}"
+  hp = unit_info.select(&:alive?).map(&:hit_points).sum
+  outcomes[elf_attack_power] = hp * rounds
+  true
 end
 
-puts "battle ended after #{rounds} rounds"
-hp = unit_info.select(&:alive?).map(&:hit_points).sum
-puts "remaining hit points: #{hp}; outcome: #{hp * rounds}"
+outcomes = {}
+elf_attack_power = 4
+loop do
+  break if run_simulation(maze.dup, elf_attack_power, outcomes)
+  elf_attack_power *= 4
+end
+
+ub = elf_attack_power
+lb = elf_attack_power / 2
+loop do
+  elf_attack_power = (lb + ub) / 2
+  break if outcomes.key?(elf_attack_power)
+  if run_simulation(maze.dup, elf_attack_power, outcomes)
+    ub = elf_attack_power
+  else
+    lb = elf_attack_power
+  end
+end
+
+puts "minimum elf attack power: #{ub}; battle outcome: #{outcomes[ub]}"
+
