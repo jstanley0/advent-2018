@@ -5,6 +5,8 @@ import(
     "os"
     "log"
     "fmt"
+    "crypto/md5"
+    "encoding/hex"
 )
 
 func count_neighbors(board []string, x, y int) (tree, lumber int) {
@@ -58,7 +60,29 @@ func print_board(board []string) {
     for _, row := range board {
         fmt.Println(row)
     }
-    fmt.Println()
+}
+
+func print_stats(round int, board []string) {
+    wood := 0
+    lumberyard := 0
+    for _, row := range board {
+        for _, c := range row {
+            if c == '|' {
+                wood++
+            } else if c == '#' {
+                lumberyard++
+            }
+        }
+    }
+    fmt.Println(round, ":", wood, "*", lumberyard, "=", wood * lumberyard)
+}
+
+func hash_board(board []string) string {
+    hasher := md5.New()
+    for _, row := range board {
+        hasher.Write([]byte(row))
+    }
+    return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func main() {
@@ -79,22 +103,17 @@ func main() {
         board = append(board, scanner.Text())
     }
 
-    for i := 0; i < 10; i++ {
+    hist := make(map[string]int)
+    for i := 0;; i++ {
         board = iterate(board)
-        print_board(board)
-    }
-
-    wood := 0
-    lumberyard := 0
-    for _, row := range board {
-        for _, c := range row {
-            if c == '|' {
-                wood++
-            } else if c == '#' {
-                lumberyard++
-            }
+        print_stats(i, board)
+        hash := hash_board(board)
+        if previous_iter, ok := hist[hash]; ok {
+            print_board(board)
+            fmt.Println("cycle detected, iteration", previous_iter, "to", i)
+            break
+        } else {
+            hist[hash] = i
         }
     }
-
-    fmt.Println(wood, "*", lumberyard, "=", wood * lumberyard)
 }
