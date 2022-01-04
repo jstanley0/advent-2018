@@ -6,11 +6,13 @@ interface Instruction {
 }
 type Program = Array<Instruction>;
 
-function runProgram(program: Program, ip_reg: number) {
-    let regs = [1n, 0n, 0n, 0n, 0n, 0n];
+function runProgram(program: Program, r0: bigint, ip_reg: number) {
+    let regs = [r0, 0n, 0n, 0n, 0n, 0n];
     let ip = 0n;
+    let n = 0;
 
     while(ip >= 0n && ip < BigInt(program.length)) {
+        n += 1;
         if (ip_reg >= 0) {
             regs[ip_reg] = BigInt(ip);
         }
@@ -69,10 +71,10 @@ function runProgram(program: Program, ip_reg: number) {
         if (ip_reg >= 0) {
             ip = regs[ip_reg];
         }
-        console.log(inst, regs);
+        //console.log(inst, regs);
         ip++;
     }
-    console.log(regs);
+    console.log(n, regs);
 }
 
 let program: Program = fs.readFileSync(process.argv[2], 'ascii')
@@ -88,4 +90,4 @@ let ip_reg;
 if (program[0].opcode == '#ip') {
     ip_reg = program.shift().args[0];
 }
-runProgram(program, ip_reg);
+runProgram(program, BigInt(process.argv[3]), ip_reg);
