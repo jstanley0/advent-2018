@@ -6,66 +6,66 @@ interface Instruction {
 }
 type Program = Array<Instruction>;
 
-function runProgram(program: Program, r0: bigint, ip_reg: number) {
-    let regs = [r0, 0n, 0n, 0n, 0n, 0n];
-    let ip = 0n;
+function runProgram(program: Program, r0: number, ip_reg: number) {
+    let regs = [r0, 0, 0, 0, 0, 0];
+    let ip = 0;
     let n = 0;
 
-    while(ip >= 0n && ip < BigInt(program.length)) {
+    while(ip >= 0 && ip < program.length) {
         n += 1;
         if (ip_reg >= 0) {
-            regs[ip_reg] = BigInt(ip);
+            regs[ip_reg] = ip;
         }
-        const inst = program[Number(ip)];
+        const inst = program[ip];
 
         switch(inst.opcode) {
         case 'addr':
             regs[inst.args[2]] = regs[inst.args[0]] + regs[inst.args[1]];
             break;
         case 'addi':
-            regs[inst.args[2]] = regs[inst.args[0]] + BigInt(inst.args[1]);
+            regs[inst.args[2]] = regs[inst.args[0]] + inst.args[1];
             break;
         case 'mulr':
             regs[inst.args[2]] = regs[inst.args[0]] * regs[inst.args[1]];
             break;
         case 'muli':
-            regs[inst.args[2]] = regs[inst.args[0]] * BigInt(inst.args[1]);
+            regs[inst.args[2]] = regs[inst.args[0]] * inst.args[1];
             break;
         case 'banr':
             regs[inst.args[2]] = regs[inst.args[0]] & regs[inst.args[1]];
             break;
         case 'bani':
-            regs[inst.args[2]] = regs[inst.args[0]] & BigInt(inst.args[1]);
+            regs[inst.args[2]] = regs[inst.args[0]] & inst.args[1];
             break;
         case 'borr':
             regs[inst.args[2]] = regs[inst.args[0]] | regs[inst.args[1]];
             break;
         case 'bori':
-            regs[inst.args[2]] = regs[inst.args[0]] | BigInt(inst.args[1]);
+            regs[inst.args[2]] = regs[inst.args[0]] | inst.args[1];
             break;
         case 'setr':
             regs[inst.args[2]] = regs[inst.args[0]];
             break;
         case 'seti':
-            regs[inst.args[2]] = BigInt(inst.args[0]);
+            regs[inst.args[2]] = inst.args[0];
             break;
         case 'gtir':
-            regs[inst.args[2]] = (BigInt(inst.args[0]) > regs[inst.args[1]]) ? 1n : 0n;
+            regs[inst.args[2]] = (inst.args[0] > regs[inst.args[1]]) ? 1 : 0;
             break;
         case 'gtri':
-            regs[inst.args[2]] = (regs[inst.args[0]] > BigInt(inst.args[1])) ? 1n : 0n;
+            regs[inst.args[2]] = (regs[inst.args[0]] > inst.args[1]) ? 1 : 0;
             break;
         case 'gtrr':
-            regs[inst.args[2]] = (regs[inst.args[0]] > regs[inst.args[1]]) ? 1n : 0n;
+            regs[inst.args[2]] = (regs[inst.args[0]] > regs[inst.args[1]]) ? 1 : 0;
             break;
         case 'eqir':
-            regs[inst.args[2]] = (BigInt(inst.args[0]) === regs[inst.args[1]]) ? 1n : 0n;
+            regs[inst.args[2]] = (inst.args[0] === regs[inst.args[1]]) ? 1 : 0;
             break;
         case 'eqri':
-            regs[inst.args[2]] = (regs[inst.args[0]] === BigInt(inst.args[1])) ? 1n : 0n;
+            regs[inst.args[2]] = (regs[inst.args[0]] === inst.args[1]) ? 1 : 0;
             break;
         case 'eqrr':
-            regs[inst.args[2]] = (regs[inst.args[0]] === regs[inst.args[1]]) ? 1n : 0n;
+            regs[inst.args[2]] = (regs[inst.args[0]] === regs[inst.args[1]]) ? 1 : 0;
             break;
         }
         if (ip_reg >= 0) {
@@ -90,4 +90,4 @@ let ip_reg;
 if (program[0].opcode == '#ip') {
     ip_reg = program.shift().args[0];
 }
-runProgram(program, BigInt(process.argv[3]), ip_reg);
+runProgram(program, parseInt(process.argv[3], 10), ip_reg);
