@@ -1,0 +1,37 @@
+ 0 r4 = 123         #seti 123 0 4
+foo:
+ 1 r4 &= 456        #bani 4 456 4
+ 2 r4 = r4 == 72    #eqri 4 72 4
+ 3 jmp +r4          #addr 4 1 1
+ 4 jmp foo          #seti 0 0 1
+ 5 r4 = 0           #seti 0 8 4
+bing:
+ 6 r3 = r4 | 0x10000 #bori 4 65536 3
+ 7 r4 = 0xf5a68b    #seti 16098955 8 4
+bong:
+ 8 r5 = r3 & 255    #bani 3 255 5
+ 9 r4 += r5         #addr 4 5 4
+10 r4 &= 0xffffff   #bani 4 16777215 4
+11 r4 *= 65899      #muli 4 65899 4
+12 r4 &= 0xffffff   #bani 4 16777215 4
+13 r5 = 256 > r3    #gtir 256 3 5
+14 jmp +r5          #addr 5 1 1
+15 jmp +1           #addi 1 1 1
+16 jmp bar          #seti 27 3 1
+17 r5 = 0           #seti 0 7 5
+quux:
+18 r2 = r5 + 1      #addi 5 1 2
+19 r2 *= 256        #muli 2 256 2
+20 r2 = r2 > r3     #gtrr 2 3 2
+21 jmp +r2          #addr 2 1 1
+22 jmp +1           #addi 1 1 1
+23 jmp baz          #seti 25 1 1
+24 r5 += 1          #addi 5 1 5
+25 jmp quux         #seti 17 6 1
+baz:
+26 r3 = r5          #setr 5 4 3
+27 jmp bong         #seti 7 5 1
+bar:
+28 r5 = r4 == r0    #eqrr 4 0 5
+29 jmp +r5          #addr 5 1 1
+30 jmp bing         #seti 5 3 1
