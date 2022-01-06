@@ -8,18 +8,15 @@ using namespace std;
 
 struct Coord {
     int x, y;
-    Coord(int x_ = 0, int y_ = 0) : x(x_), y(y_) {}
-    Coord(const Coord &rhs) : x(rhs.x), y(rhs.y) {}
     bool operator== (const Coord& rhs) const { return x == rhs.x && y == rhs.y; }
     bool operator< (const Coord& rhs) const { return y < rhs.y || (y == rhs.y && x < rhs.x); }
 };
 
 struct Node {
-    bool n, s, w, e;
-    Node() : n(false), s(false), w(false), e(false) {}
+    bool n = false, s = false, w = false, e = false;
 };
 
-void parse_pattern(map<Coord, Node>& nodes, string::iterator &it, int x, int y)
+void parse_pattern(map<Coord, Node>& nodes, string::iterator& it, int x, int y)
 {
     for(;;) {
         if (*it == '(') {
@@ -37,28 +34,28 @@ void parse_pattern(map<Coord, Node>& nodes, string::iterator &it, int x, int y)
         }
 
         while(isalpha(*it)) {
-            Node &node = nodes[Coord(x, y)];
+            Node &node = nodes[{x, y}];
 
             switch(*it) {
             case 'N':
                 node.n = true;
                 --y;
-                nodes[Coord(x, y)].s = true;
+                nodes[{x, y}].s = true;
                 break;
             case 'W':
                 node.w = true;
                 --x;
-                nodes[Coord(x, y)].e = true;
+                nodes[{x, y}].e = true;
                 break;
             case 'E':
                 node.e = true;
                 ++x;
-                nodes[Coord(x, y)].w = true;
+                nodes[{x, y}].w = true;
                 break;
             case 'S':
                 node.s = true;
                 ++y;
-                nodes[Coord(x, y)].n = true;
+                nodes[{x, y}].n = true;
                 break;
             }
             ++it;
@@ -75,12 +72,12 @@ int main(int argc, char **argv)
         cerr << "no filename given\n";
         return 1;
     }
-    ifstream input(argv[1]);
+    ifstream input{argv[1]};
     string data;
     getline(input, data);
 
     map<Coord, Node> nodes;
-    nodes.emplace(make_pair(Coord(0, 0), Node()));
+    nodes.emplace(make_pair(Coord{0, 0}, Node()));
 
     auto it = data.begin();
     if (*it == '^')
