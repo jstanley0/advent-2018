@@ -100,50 +100,26 @@ int main(int argc, char **argv)
     while (!search_set.empty()) {
         auto elem = search_set.top();
         search_set.pop();
-        printf("searching at (%d, %d) / %d [%lu]\n", elem.coord.x, elem.coord.y, elem.distance, search_set.size());
+
         max_dist = max(max_dist, elem.distance);
         if (elem.distance >= 1000)
             ++distant_rooms;
         Node &node = nodes[elem.coord];
-        if (node.visited) {
-            printf(":(");
-        } else {
-            node.visited = true;
-            if (node.n) {
-                auto c = Coord{elem.coord.x, elem.coord.y - 1};
-                printf("-> (%d,%d)\n", c.x, c.y);
-                Node &n = nodes[c];
-                if (!n.visited) {
-                    search_set.push({c, elem.distance + 1});
-                }
+        node.visited = true;
+
+        auto consider_coord = [&](const Coord &c) {
+            Node &n = nodes[c];
+            if (!n.visited) {
+                search_set.push({c, elem.distance + 1});
             }
-            if (node.s) {
-                auto c = Coord{elem.coord.x, elem.coord.y + 1};
-                printf("-> (%d,%d)\n", c.x, c.y);
-                Node &n = nodes[c];
-                if (!n.visited) {
-                    search_set.push({c, elem.distance + 1});
-                }
-            }
-            if (node.w) {
-                auto c = Coord{elem.coord.x - 1, elem.coord.y};
-                printf("-> (%d,%d)\n", c.x, c.y);
-                Node &n = nodes[c];
-                if (!n.visited) {
-                    search_set.push({c, elem.distance + 1});
-                }
-            }
-            if (node.e) {
-                auto c = Coord{elem.coord.x + 1, elem.coord.y};
-                printf("-> (%d,%d)\n", c.x, c.y);
-                Node &n = nodes[c];
-                if (!n.visited) {
-                    search_set.push({c, elem.distance + 1});
-                }
-            }
-        }
+        };
+
+        if (node.n) consider_coord({elem.coord.x, elem.coord.y - 1});
+        if (node.s) consider_coord({elem.coord.x, elem.coord.y + 1});
+        if (node.w) consider_coord({elem.coord.x - 1, elem.coord.y});
+        if (node.e) consider_coord({elem.coord.x + 1, elem.coord.y});
     }
 
-    printf("%d; %d\n", max_dist, distant_rooms);
+    printf("furthest room: %d; rooms >1000 doors away: %d\n", max_dist, distant_rooms);
     return 0;
 }
