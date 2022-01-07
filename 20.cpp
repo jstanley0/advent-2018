@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <queue>
 #include <stdexcept>
 #include <cctype>
 
@@ -14,6 +15,13 @@ struct Coord {
 
 struct Node {
     bool n = false, s = false, w = false, e = false;
+    bool visited = false;
+};
+
+struct SearchElem {
+    Coord coord;
+    int distance;
+    bool operator< (const SearchElem& rhs) const { return rhs.distance > distance; }
 };
 
 void parse_pattern(map<Coord, Node>& nodes, string::iterator& it, int x, int y)
@@ -77,12 +85,65 @@ int main(int argc, char **argv)
     getline(input, data);
 
     map<Coord, Node> nodes;
-    nodes.emplace(make_pair(Coord{0, 0}, Node()));
+    nodes[{0, 0}];
 
     auto it = data.begin();
     if (*it == '^')
         ++it;
     parse_pattern(nodes, it, 0, 0);
-
     cout << "room count: " << nodes.size() << endl;
+
+    priority_queue<SearchElem> search_set;
+    search_set.push({{0, 0}, 0});
+    int max_dist = -1;
+    int distant_rooms = 0;
+    while (!search_set.empty()) {
+        auto elem = search_set.top();
+        search_set.pop();
+        printf("searching at (%d, %d) / %d [%lu]\n", elem.coord.x, elem.coord.y, elem.distance, search_set.size());
+        max_dist = max(max_dist, elem.distance);
+        if (elem.distance >= 1000)
+            ++distant_rooms;
+        Node &node = nodes[elem.coord];
+        if (node.visited) {
+            printf(":(");
+        } else {
+            node.visited = true;
+            if (node.n) {
+                auto c = Coord{elem.coord.x, elem.coord.y - 1};
+                printf("-> (%d,%d)\n", c.x, c.y);
+                Node &n = nodes[c];
+                if (!n.visited) {
+                    search_set.push({c, elem.distance + 1});
+                }
+            }
+            if (node.s) {
+                auto c = Coord{elem.coord.x, elem.coord.y + 1};
+                printf("-> (%d,%d)\n", c.x, c.y);
+                Node &n = nodes[c];
+                if (!n.visited) {
+                    search_set.push({c, elem.distance + 1});
+                }
+            }
+            if (node.w) {
+                auto c = Coord{elem.coord.x - 1, elem.coord.y};
+                printf("-> (%d,%d)\n", c.x, c.y);
+                Node &n = nodes[c];
+                if (!n.visited) {
+                    search_set.push({c, elem.distance + 1});
+                }
+            }
+            if (node.e) {
+                auto c = Coord{elem.coord.x + 1, elem.coord.y};
+                printf("-> (%d,%d)\n", c.x, c.y);
+                Node &n = nodes[c];
+                if (!n.visited) {
+                    search_set.push({c, elem.distance + 1});
+                }
+            }
+        }
+    }
+
+    printf("%d; %d\n", max_dist, distant_rooms);
+    return 0;
 }
