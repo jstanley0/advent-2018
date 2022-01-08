@@ -1,6 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <map>
+#include <queue>
 #include <cstdlib>
+#include <cmath>
 
 using namespace std;
 
@@ -39,7 +42,7 @@ int main(int argc, char **argv)
         return (geologic_index + depth) % 20183;
     };
 
-    Matrix<long> matrix(target_x * 2, target_y * 2);
+    Matrix<long> matrix(target_x * 5, target_y * 3);
     matrix(0, 0) = erosion_level(0);
     matrix(target_x, target_y) = erosion_level(0);
     for(int x = 1; x < matrix.width(); ++x) {
@@ -67,32 +70,85 @@ int main(int argc, char **argv)
     // and now, for something completely different...
     // ... but kind of the same
 
-    Matrix<char> cave(matrix.width(), matrix.height());
-    for(int x = 0; x < cave.width(); ++x) {
-        for(int y = 0; y < cave.height(); ++y) {
-            char c;
-            switch(matrix(x, y) % 3) {
-            case 0:
-                c = '.';
-                break;
-            case 1:
-                c = '=';
-                break;
-            case 2:
-                c = '|';
-                break;
+    // topography   tooling
+    //  .  0        T C    0 1
+    //  =  1          C N    1 2
+    //  |  2        T   N  0   2
+
+    // so we will model this as a three-dimensional maze with height 3
+    // where the z axis wraps around, and there is an open vertical space
+    // of height 2 in every (x, y) coordinate, starting at z = risk/topo.
+    // where we start at (0, 0, 0) and end at (target_x, target_y, 0).
+    // it costs 7 to move in z, and 1 to move in (x, y).
+
+    // now I get to implement A* yet again!
+
+    struct Coord {
+        int x, y, z;
+
+        bool operator==(const Coord& rhs) const {
+            return x == rhs.x && y == rhs.y && z == rhs.z;
+        }
+        bool operator<(const Coord& rhs) const {
+            return z < rhs.z ||
+                  (z == rhs.z && y < rhs.y) ||
+                  (z == rhs.z && y == rhs.y && x < rhs.x);
+        }
+    };
+
+    struct QueueEntry {
+        Coord c;
+        int est_total_time;
+
+        bool operator<(const QueueEntry& rhs) const {
+            return est_total_time > rhs.est_total_time;
+        }
+    };
+
+    Coord home{0, 0, 0};
+    Coord target{target_x, target_y, 0};
+
+    auto time_bound = [&target](const Coord& coord) {
+        return abs(target.x - coord.x) + abs(target.y - coord.y) + ((coord.z > 0) ? 7 : 0);
+    };
+
+    auto open_cell = [&matrix](const Coord& coord) {
+        int topo = matrix(coord.x, coord.y) % 3;
+        return coord.z != (topo + 2) % 3;
+    };
+
+    priority_queue<QueueEntry> fringe;
+    fringe.push({home, time_bound(home)});
+
+    map<Coord, int> best_time_to = {{home, 0}};
+
+    while (!fringe.empty()) {
+        auto current = fringe.top();
+        fringe.pop();
+        int time_so_far = best_time_to[current.c];
+
+        if (current.c == target) {
+            cout << time_so_far << endl;
+            return 0;
+        }
+
+        auto consider_neighbor = [&](Coord c, int sub_time) {
+            if (open_cell(c)) {
+                if (!best_time_to.contains(c) || sub_time < best_time_to[c]) {
+                    best_time_to[c] = sub_time;
+                    fringe.push({c, sub_time + time_bound(c)});
+                }
             }
-            cave(x, y) = c;
-        }
+        };
+
+        if (current.c.x > 0) consider_neighbor({current.c.x - 1, current.c.y, current.c.z}, time_so_far + 1);
+        if (current.c.y > 0) consider_neighbor({current.c.x, current.c.y - 1, current.c.z}, time_so_far + 1);
+        if (current.c.x < matrix.width() - 1) consider_neighbor({current.c.x + 1, current.c.y, current.c.z}, time_so_far + 1);
+        if (current.c.y < matrix.height() - 1) consider_neighbor({current.c.x, current.c.y + 1, current.c.z}, time_so_far + 1);
+        consider_neighbor({current.c.x, current.c.y, (current.c.z + 1) % 3}, time_so_far + 7);
+        consider_neighbor({current.c.x, current.c.y, (current.c.z + 2) % 3}, time_so_far + 7);
     }
 
-    for(int y = 0; y < cave.height(); ++y) {
-        for(int x = 0; x < cave.width(); ++x) {
-            putchar(cave(x, y));
-        }
-        putchar('\n');
-    }
-
-
-
+    cout << "no path found :(" << endl;
+    return 1;
 }
