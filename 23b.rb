@@ -25,11 +25,13 @@ end
 
 opt = Z3::Optimize.new
 nanobots.each_with_index do |bot, ri|
-  Z3::LowLevel.optimize_assert_soft(opt,
-    zabs(x - bot[0]) + zabs(y - bot[1]) + zabs(z - bot[2]) <= bot[3],
-    "1", nil)
+  opt.assert_soft zabs(x - bot[0]) + zabs(y - bot[1]) + zabs(z - bot[2]) <= bot[3]
 end
 opt.minimize(x + y + z)
-opt.satisfiable?
-puts opt.model.to_s
-puts opt.model.to_h.values.map(&:to_i).sum
+
+if opt.satisfiable?
+  puts opt.model.to_s
+  puts opt.model.to_h.values.map(&:to_i).sum
+else
+  puts ":("
+end
