@@ -46,11 +46,7 @@ func extractNumber(_ tokens: inout [String.SubSequence]) -> Int {
 // how is this not built in??
 // also why won't Swift let me split on e.g. ", "? that'd really make life easier
 func strip(_ substr : String.SubSequence) -> String.SubSequence {
-    if substr.starts(with: " ") {
-        return substr.dropFirst(1)
-    } else {
-        return substr
-    }
+    return substr.drop(while: { $0 == " " })
 }
 
 // e.g. "35 units each with 3755 hit points (weak to cold; immune to fire, bludgeoning) with an attack that does 1021 bludgeoning damage at initiative 1"
